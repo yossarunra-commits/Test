@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Classroom System v3.1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fdcb6e;
+            --danger: #ff7675;
+            --success: #55efc4;
+            --bg: #f0f3f7;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #2d3436;
+        }
+
+        .teacher-mode-trigger {
+            position: fixed;
+            top: 10px;     
+            right: 0px;   
+            background: #000000;   
+            color: #ffffff;        
+            padding: 6px 12px;     
+            border-radius: 4px;    
+            font-size: 12px;       
+            font-weight: 600;
+            text-transform: uppercase; 
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: block; 
+        }
+
+        .teacher-mode-trigger:hover { 
+            background: #2d3436;   
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 420px;
+            position: relative;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 { 
+            color: var(--primary); 
+            margin-bottom: 1rem; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        h3 {
+            color: var(--secondary);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-family: 'Kanit';
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-back { background: #dfe6e9; color: #636e72; width: auto; padding: 5px 15px; margin-bottom: 15px; font-size: 0.8rem; }
+        .btn-logout { background: var(--danger); color: white; margin-top: 15px; font-size: 0.9rem; }
+        .btn-delete-q { background: var(--danger); margin-top: 5px; }
+
+        .screen { display: none; }
+        .active { display: block; }
+
+        .user-bar {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .subject-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 6px solid var(--primary);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .answer-item {
+            background: white;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+            transition: box-shadow 0.3s;
+        }
+
+        .answer-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .timer { font-size: 1.1rem; color: var(--danger); font-weight: bold; margin: 8px 0; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); }
+        .hidden { display: none; }
+
+        .scores-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin: 15px 0;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .score-item {
+            font-size: 1.1rem;
+            margin: 8px 0;
+            color: #34495e;
+        }
+
+        .score-total {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .no-score {
+            color: #636e72;
+            font-style: italic;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px dashed #ddd;
+        }
+
+        /* การตกแต่งสำหรับหน้าครู */
+        .teacher-screen {
+            background: linear-gradient(135deg, #ffffff, #f1f3f5);
+            border: 2px solid var(--secondary);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(108,92,231,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .teacher-screen h2, .teacher-screen h3 {
+            text-align: center;
+            color: var(--primary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .teacher-screen button {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .teacher-screen button:hover {
+            transform: translateY(-3px);
+        }
+
+        .teacher-screen select, .teacher-screen input, .teacher-screen textarea {
+            border-color: var(--secondary);
+            background: #f9fbfc;
+        }
+
+        .teacher-screen .user-bar {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            font-size: 1.1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* การตกแต่งสำหรับหน้านักเรียน */
+        .student-screen {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(162,155,254,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .student-screen h2, .student-screen h3 {
+            text-align: center;
+            color: var(--secondary);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .student-screen button {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .student-screen button:hover {
+            transform: translateY(-3px);
+        }
+
+        .student-screen select, .student-screen input, .student-screen textarea {
+            border-color: var(--primary);
+            background: #f9fbfc;
+        }
+
+        .student-screen .user-bar {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            font-size: 1.1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .student-screen .subject-card {
+            transition: transform 0.2s;
+        }
+
+        .student-screen .subject-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .task-item, .question-item {
+            background: white;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+            transition: box-shadow 0.3s;
+        }
+
+        .task-item:hover, .question-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .add-btn {
+            background: var(--accent);
+            color: #2d3436;
+            width: auto;
+            padding: 8px 16px;
+            margin-top: 10px;
+        }
+
+        .options-container {
+            margin-top: 10px;
+        }
+
+        .option-input {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="teacher-mode-trigger" id="master-teacher-btn" onclick="showScreen('teacher-login')">TEACHER MODE</button>
+
+    <div class="container">
+        
+        <div id="student-login" class="screen active">
+            <h2 style="margin-top:0;">Student Login</h2>
+            <p style="font-size: 0.9rem; color: #636e72;">กรุณาใส่รหัสนักเรียนเพื่อเข้าเรียน</p>
+            <input type="text" id="student-id-input" placeholder="ใส่รหัสนักเรียน (เช่น 0000)" maxlength="5">
+            <button onclick="loginStudent()">เข้าสู่ระบบ</button>
+        </div>
+
+        <div id="teacher-login" class="screen">
+            <button class="btn-back" onclick="showScreen('student-login')">← กลับหน้าหลัก</button>
+            <h2>Teacher Access</h2>
+            <input type="password" id="teacher-pass" placeholder="ใส่รหัสผ่านครู">
+            <button onclick="loginTeacher()">ยืนยันรหัสผ่าน</button>
+        </div>
+
+        <div id="teacher-dash" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('student-login')">← ออกจากระบบครู</button>
+                <h2>ระบบจัดการของคุณครู</h2>
+                <button onclick="showScreen('teacher-donow')" style="background: #0984e3;">📝 กิจกรรม Do Now</button>
+                <button onclick="showScreen('teacher-scores')" style="background: #0984e3;">📊 ลงคะแนน</button>
+                <button onclick="showScreen('teacher-pending')" style="background: #0984e3;">📌 จัดการงานค้าง</button>
+                <button onclick="showScreen('teacher-exam')" style="background: #0984e3;">📄 จัดการข้อสอบ</button>
+                <button onclick="showScreen('teacher-attendance')" style="background: #0984e3;">✅ เช็คชื่อ</button>
+                <button onclick="showScreen('teacher-login-logs')" style="background: #0984e3;">📋 บันทึกการเข้าสู่ระบบ</button>
+            </div>
+        </div>
+
+        <div id="teacher-donow" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-dash')">← กลับ</button>
+                <h3>กิจกรรม Do Now</h3>
+                <select id="donow-subject-select">
+                    <option value="">เลือกวิชา</option>
+                    <option value="coding">Coding</option>
+                    <option value="math">คณิตศาสตร์</option>
+                </select>
+                <textarea id="donow-question" rows="3" placeholder="พิมพ์คำถามที่นี่..."></textarea>
+                <button onclick="sendDoNow()" style="background: var(--success); color:#2d3436;">ส่งคำถามให้นักเรียน</button>
+                <button style="background: var(--secondary);" onclick="showAnswers()">ดูคำตอบนักเรียน</button>
+                <button class="btn-delete-q" onclick="deleteCurrentQuestion()">ลบคำถามปัจจุบัน</button>
+            </div>
+        </div>
+
+        <div id="teacher-view-answers" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-donow')">← กลับ</button>
+                <h3>รายการคำตอบ</h3>
+                <select id="answers-subject-select">
+                    <option value="">เลือกวิชา</option>
+                    <option value="coding">Coding</option>
+                    <option value="math">คณิตศาสตร์</option>
+                </select>
+                <div id="answers-list"></div>
+            </div>
+        </div>
+
+        <div id="teacher-scores" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-dash')">← กลับ</button>
+                <h3>ลงคะแนน</h3>
+                <select id="scores-subject-select">
+                    <option value="">เลือกวิชา</option>
+                    <option value="coding">Coding</option>
+                    <option value="math">คณิตศาสตร์</option>
+                </select>
+                <select id="student-select">
+                    <option value="">เลือกนักเรียน</option>
+                </select>
+                <input type="number" id="exam-score" placeholder="คะแนนสอบ (0-10)" min="0" max="10" step="0.5">
+                <input type="number" id="collect-score" placeholder="คะแนนเก็บ (0-40)" min="0" max="40" step="0.5">
+                <button onclick="saveScores()">บันทึกคะแนน</button>
+                <button style="background: var(--danger);" onclick="resetScores()">รีเซ็ตคะแนน</button>
+            </div>
+        </div>
+
+        <div id="teacher-pending" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-dash')">← กลับ</button>
+                <h3>จัดการงานค้าง</h3>
+                <select id="pending-subject-select">
+                    <option value="">เลือกวิชา</option>
+                    <option value="coding">Coding</option>
+                    <option value="math">คณิตศาสตร์</option>
+                </select>
+                <select id="pending-student-select">
+                    <option value="">เลือกนักเรียน</option>
+                </select>
+                <div id="pending-tasks-list"></div>
+                <input type="text" id="new-pending-task" placeholder="กรอกงานค้างใหม่">
+                <input type="file" id="pending-task-image" accept="image/*">
+                <button class="add-btn" onclick="addPendingTask()">เพิ่มงาน</button>
+                <button onclick="loadPendingTasks()">โหลดงานค้าง</button>
+                <button onclick="viewStudentPendingSubmissions()">ดูการส่งงานของนักเรียน</button>
+            </div>
+        </div>
+
+        <div id="teacher-exam" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-dash')">← กลับ</button>
+                <h3>จัดการข้อสอบ</h3>
+                <select id="exam-subject-select">
+                    <option value="">เลือกวิชา</option>
+                    <option value="coding">Coding</option>
+                    <option value="math">คณิตศาสตร์</option>
+                </select>
+                <div id="exam-questions-list"></div>
+                <button class="add-btn" onclick="addExamQuestionField()">เพิ่มข้อสอบ</button>
+                <button onclick="sendExam()">ส่งข้อสอบ</button>
+                <button onclick="startExam()">เริ่มสอบ</button>
+                <button onclick="closeExam()">ปิดการสอบ</button>
+                <button onclick="deleteExam()">ลบข้อสอบ</button>
+                <button onclick="viewExamAnswers()">ดูคำตอบนักเรียน</button>
+                <div id="exam-answers-list"></div>
+            </div>
+        </div>
+
+        <div id="teacher-attendance" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-dash')">← กลับ</button>
+                <h3>เช็คชื่อ</h3>
+                <select id="attendance-subject-select">
+                    <option value="">เลือกวิชา</option>
+                    <option value="coding">Coding</option>
+                    <option value="math">คณิตศาสตร์</option>
+                </select>
+                <input type="date" id="attendance-date">
+                <table id="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>รหัสนักเรียน</th>
+                            <th>ชื่อ</th>
+                            <th>สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-list"></tbody>
+                </table>
+                <button onclick="saveAttendance()">บันทึกการเช็คชื่อ</button>
+            </div>
+        </div>
+
+        <div id="teacher-login-logs" class="screen">
+            <div class="teacher-screen">
+                <button class="btn-back" onclick="showScreen('teacher-dash')">← กลับ</button>
+                <h3>บันทึกการเข้าสู่ระบบ</h3>
+                <div id="login-logs-list"></div>
+            </div>
+        </div>
+
+        <div id="student-dash" class="screen">
+            <div class="student-screen">
+                <div class="user-bar" id="student-name-tag"></div>
+                
+                <div id="coding-subject-card" class="subject-card" onclick="showScreen('coding-options')">
+                    <h3 style="margin:0;">💻 วิชา: Coding</h3>
+                    <p style="margin:5px 0 0 0; font-size:0.8rem; opacity:0.8;">คลิกเพื่อดูบทเรียน</p>
+                </div>
+
+                <div id="math-subject-card" class="subject-card" onclick="showScreen('math-options')">
+                    <h3 style="margin:0;">🧮 วิชา: คณิตศาสตร์</h3>
+                    <p style="margin:5px 0 0 0; font-size:0.8rem; opacity:0.8;">คลิกเพื่อดูบทเรียน</p>
+                </div>
+
+                <button class="btn-logout" onclick="logoutStudent()">ออกจากระบบ</button>
+            </div>
+        </div>
+                
+        <div id="coding-options" class="screen">
+            <div class="student-screen">
+                <button class="btn-back" onclick="showScreen('student-dash')">← กลับ</button>
+                <h2>เมนู Coding</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button onclick="setSubject('coding'); showScreen('student-donow-form')">📝 1. กิจกรรม Do Now</button>
+                    <button onclick="setSubject('coding'); showScreen('student-scores')">📊 2. คะแนน</button>
+                    <button onclick="setSubject('coding'); showScreen('student-pending')">📌 3. งานค้าง</button>
+                    <button onclick="setSubject('coding'); showScreen('student-exam')">📄 4. ข้อสอบ</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="math-options" class="screen">
+            <div class="student-screen">
+                <button class="btn-back" onclick="showScreen('student-dash')">← กลับ</button>
+                <h2>เมนู คณิตศาสตร์</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button onclick="setSubject('math'); showScreen('student-donow-form')">📝 1. กิจกรรม Do Now</button>
+                    <button onclick="setSubject('math'); showScreen('student-scores')">📊 2. คะแนน</button>
+                    <button onclick="setSubject('math'); showScreen('student-pending')">📌 3. งานค้าง</button>
+                    <button onclick="setSubject('math'); showScreen('student-exam')">📄 4. ข้อสอบ</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="student-donow-form" class="screen">
+            <div class="student-screen">
+                <button class="btn-back" onclick="showScreen(currentSubject === 'coding' ? 'coding-options' : 'math-options')">← กลับ</button>
+                <div id="donow-active-area">
+                    <div id="question-display" style="background: white; padding:15px; border-radius:10px; border: 1px solid #ddd; margin-bottom:10px; font-weight:600;"></div>
+                    <div id="timer-display" class="timer"></div>
+                    <textarea id="stu-answer" placeholder="พิมพ์คำตอบของคุณที่นี่..."></textarea>
+                    <button id="btn-submit-answer" onclick="submitAnswer()">ส่งคำตอบ</button>
+                </div>
+                <div id="donow-empty" class="hidden">
+                    <p style="text-align: center; color: #636e72;">ขณะนี้ยังไม่มีคำถามจากคุณครู 😊</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="student-scores" class="screen">
+            <div class="student-screen">
+                <button class="btn-back" onclick="showScreen(currentSubject === 'coding' ? 'coding-options' : 'math-options')">← กลับ</button>
+                <h2 id="student-scores-h2">คะแนน</h2>
+                <div id="scores-display" class="scores-card"></div>
+            </div>
+        </div>
+
+        <div id="student-pending" class="screen">
+            <div class="student-screen">
+                <button class="btn-back" onclick="showScreen(currentSubject === 'coding' ? 'coding-options' : 'math-options')">← กลับ</button>
+                <h3>งานค้าง</h3>
+                <div id="student-pending-list"></div>
+                <textarea id="pending-text-answer" placeholder="พิมพ์คำตอบงานค้างที่นี่..."></textarea>
+                <input type="file" id="pending-file-upload" accept="image/*">
+                <button onclick="submitPendingWork()">ส่งงาน</button>
+            </div>
+        </div>
+
+        <div id="student-exam" class="screen">
+            <div class="student-screen">
+                <button class="btn-back" onclick="showScreen(currentSubject === 'coding' ? 'coding-options' : 'math-options')">← กลับ</button>
+                <h3>ข้อสอบ</h3>
+                <div id="exam-status"></div>
+                <div id="exam-form" class="hidden"></div>
+                <button id="submit-exam-btn" class="hidden" onclick="submitExamAnswers()">ส่งข้อสอบ</button>
+                <p id="exam-takers-count"></p>
+            </div>
+        </div>
+
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+  // 1. การตั้งค่า Firebase ของคุณ
+  const firebaseConfig = {
+    apiKey: "AIzaSyDjUfktWF1QEO247xfX0fbiDc9HTUxA1AQ",
+    authDomain: "realtimedata-7b490.firebaseapp.com",
+    databaseURL: "https://realtimedata-7b490-default-rtdb.firebaseio.com",
+    projectId: "realtimedata-7b490",
+    storageBucket: "realtimedata-7b490.firebasestorage.app",
+    messagingSenderId: "811896550662",
+    appId: "1:811896550662:web:6ec11f951904c81da1da87",
+    measurementId: "G-X69Z82RFSW"
+  };
+
+  // 2. เริ่มต้นใช้งาน Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // ตัวอย่างการเปลี่ยนฟังก์ชันเดิม (จาก localStorage เป็น Firebase)
+  // หากต้องการส่งคำถาม (Do Now) ไปที่ฐานข้อมูล:
+  function sendDoNowToFirebase(content) {
+    database.ref('donow').set({
+      question: content,
+      timestamp: Date.now()
+    });
+    alert('ส่งคำถามเรียบร้อยแล้ว!');
+  }
+  
+        let currentSubject = '';
+        function setSubject(s) {
+            currentSubject = s;
+        }
+
+        let refreshIntervals = {};
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            const teacherBtn = document.getElementById('master-teacher-btn');
+            if(id === 'student-login') {
+                teacherBtn.style.display = 'block';
+            } else {
+                teacherBtn.style.display = 'none';
+            }
+
+            // Clear existing intervals
+            Object.values(refreshIntervals).forEach(clearInterval);
+            refreshIntervals = {};
+
+            if(id === 'student-donow-form') {
+                loadStudentDoNow();
+                refreshIntervals.donow = setInterval(loadStudentDoNow, 5000);
+            }
+            if(id === 'student-scores') {
+                document.getElementById('student-scores-h2').innerText = `คะแนน ${currentSubject === 'coding' ? 'Coding' : 'คณิตศาสตร์'}`;
+                loadStudentScores();
+                refreshIntervals.scores = setInterval(loadStudentScores, 5000);
+            }
+            if(id === 'teacher-pending') {
+                loadPendingTasks();
+                refreshIntervals.pending = setInterval(loadPendingTasks, 5000);
+            }
+            if(id === 'student-pending') {
+                loadStudentPending();
+                refreshIntervals.studentPending = setInterval(loadStudentPending, 5000);
+            }
+            if(id === 'student-exam') {
+                loadStudentExam();
+                refreshIntervals.exam = setInterval(loadStudentExam, 5000);
+            }
+            if(id === 'teacher-exam') {
+                loadTeacherExam();
+                refreshIntervals.teacherExam = setInterval(loadTeacherExam, 5000);
+            }
+            if(id === 'teacher-attendance') {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('attendance-date').value = today;
+                loadAttendance();
+                refreshIntervals.attendance = setInterval(loadAttendance, 5000);
+            }
+            if(id === 'teacher-login-logs') {
+                loadLoginLogs();
+                refreshIntervals.loginLogs = setInterval(loadLoginLogs, 5000);
+            }
+            if(id === 'teacher-view-answers') {
+                showAnswers();
+                refreshIntervals.answers = setInterval(showAnswers, 5000);
+            }
+        }
+
+        function loginTeacher() {
+            if(document.getElementById('teacher-pass').value === '4938') {
+                showScreen('teacher-dash');
+                document.getElementById('teacher-pass').value = '';
+            } else { 
+                alert('รหัสผ่านครูไม่ถูกต้อง!'); 
+            }
+        }
+
+        function sendDoNow() {
+        const subject = document.getElementById('donow-subject-select').value;
+        const q = document.getElementById('donow-question').value;
+        
+        if(!subject || !q) return alert('กรุณากรอกข้อมูลให้ครบ');
+
+        // ส่งข้อมูลไปที่ Firebase แทน LocalStorage
+        firebase.database().ref(`currentDoNow/${subject}`).set({
+            question: q,
+            startTime: Date.now()
+        });
+        
+        alert('ส่งคำถามไปยังนักเรียนทุกคนแล้ว!');
+        }
+
+        function deleteCurrentQuestion() {
+            const subject = document.getElementById('donow-subject-select').value;
+            if(!subject) return alert('กรุณาเลือกวิชาก่อน');
+            if(confirm('ยืนยันการลบคำถาม?')) {
+                localStorage.removeItem(`currentDoNow_${subject}`);
+                document.getElementById('donow-question').value = '';
+                alert('ลบคำถามเรียบร้อยแล้ว');
+            }
+        }
+
+        function showAnswers() {
+            let subject;
+            if (document.getElementById('teacher-view-answers').classList.contains('active')) {
+                subject = document.getElementById('answers-subject-select').value;
+            } else {
+                subject = document.getElementById('donow-subject-select').value;
+            }
+            if(!subject) return alert('กรุณาเลือกวิชาก่อน');
+            const answers = JSON.parse(localStorage.getItem(`studentAnswers_${subject}`) || '[]');
+            const container = document.getElementById('answers-list');
+            container.innerHTML = answers.length ? '' : '<p>ยังไม่มีนักเรียนตอบคำถาม</p>';
+            answers.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'answer-item';
+                div.innerHTML = `<div><b>ID ${item.id}:</b> ${item.ans}</div>
+                                 <button style="width:auto; padding:4px 8px; background:var(--danger); font-size:10px;" onclick="deleteAnswer(${index}, '${subject}')">ลบ</button>`;
+                container.appendChild(div);
+            });
+            document.getElementById('answers-subject-select').value = subject;
+            showScreen('teacher-view-answers');
+        }
+
+        function deleteAnswer(idx, subject) {
+            let ans = JSON.parse(localStorage.getItem(`studentAnswers_${subject}`) || '[]');
+            ans.splice(idx, 1);
+            localStorage.setItem(`studentAnswers_${subject}`, JSON.stringify(ans));
+            showAnswers();
+        }
+
+        const students = [
+            {id: '0000', name: 'นักเรียนทดสอบ (Guest)', number: 0},
+            {id: '4829', name: 'เด็กชายพชรพล บุตรธงชัย', number: 1},
+            {id: '4865', name: 'เด็กหญิงศรัณญา เกตุปัญญา', number: 2},
+            {id: '4900', name: 'เด็กหญิงณัฎฐณิชา สนั่นเสียง', number: 3},
+            {id: '4903', name: 'เด็กชายฐิติรัตน์ ธิติศักดิ์ทวี', number: 4},
+            {id: '4938', name: 'เด็กชายรวิชา บัวจันทร์', number: 5},
+            {id: '5003', name: 'เด็กหญิงปวริศา เอี่ยมคงสี', number: 6},
+            {id: '5007', name: 'เด็กหญิงปันดา แฝงศรีคำ', number: 7},
+            {id: '5014', name: 'เด็กหญิงณัฐนดา สุขใส', number: 8},
+            {id: '5018', name: 'เด็กชายภากร ธำรงศรีสกุล', number: 9},
+            {id: '5030', name: 'เด็กชายภูริ เกตุสวัสดิ์', number: 10},
+            {id: '5031', name: 'เด็กหญิงภารดา เพ็งคุ่ย', number: 11},
+            {id: '5033', name: 'เด็กหญิงญาณิดา ติรรัตน์เมธากุล', number: 12},
+            {id: '5035', name: 'เด็กชายณัฐพัฒน์ วันทนียเกตุศิริ', number: 13},
+            {id: '5039', name: 'เด็กหญิงพชภร บุญนาคค้า', number: 14},
+            {id: '5040', name: 'เด็กหญิงสุทัศสิณี อารยธาดาพงศ์', number: 15},
+            {id: '5043', name: 'เด็กหญิงณฐมน ร่มโพธิ์', number: 16},
+            {id: '5045', name: 'เด็กชายศักย์วริษฐ์ กวีวัจน์', number: 17},
+            {id: '5056', name: 'เด็กชายภัทรพล สีดาโสม', number: 18},
+            {id: '5062', name: 'เด็กหญิงเอมิกา อยู่นันท์ เบอร์ตัน', number: 19},
+            {id: '5063', name: 'เด็กหญิงอมินดา อยู่นันท์ เบอร์ตัน', number: 20},
+            {id: '5065', name: 'เด็กหญิงจิฬสา วงศ์เสวต', number: 21},
+            {id: '5075', name: 'เด็กหญิงปริยากร รอดคุ้ม', number: 22},
+            {id: '5106', name: 'เด็กหญิงอัญรินทร์ เกศจุฑารัตน์', number: 23},
+            {id: '5107', name: 'เด็กชายทรงคุณ บุญประเสริฐ', number: 24},
+            {id: '5144', name: 'เด็กชายอานิก สมบัติวงศ์', number: 25},
+            {id: '5248', name: 'เด็กชายภูริณัฐ ประณีหัศ', number: 26},
+            {id: '5249', name: 'เด็กหญิงภรณ์นภัส ทองยัง', number: 27},
+            {id: '5250', name: 'เด็กหญิงกานต์พิชชา เจริญสิรนันท์', number: 28},
+            {id: '5442', name: 'เด็กชายพงศวัฒน์ ธนัทธนศักดิ์', number: 29},
+            {id: '5443', name: 'เด็กชายณฐพงศ์ ชาลีรักษ์ตระกูล', number: 30},
+            {id: '5450', name: 'เด็กหญิงปณิฏฐา ประทินแสงทอง', number: 31},
+            {id: '5462', name: 'เด็กชายปภาวิน ช่วงชัย', number: 32},
+            {id: '5545', name: 'เด็กชายบุณยวัฒน์ ยังอุ่น', number: 33},
+            {id: '5581', name: 'เด็กชายณัฐสิริ เลื่อมแสง', number: 34},
+            {id: '5582', name: 'เด็กหญิงทอฝัน อินทรโสธรฉันท์', number: 35},
+            {id: '5585', name: 'เด็กชายจินต์ธนัช ตราชู', number: 36},
+            {id: '5586', name: 'เด็กหญิงมินทร์ลดา นิวาสวัฒน์', number: 37},
+            {id: '5588', name: 'เด็กชายณัฐกิตติ์ เลาหเรืองจรรยา', number: 38},
+            {id: '5589', name: 'เด็กชายอมรเทพ โกศลตระกูล', number: 39},
+            {id: '5590', name: 'เด็กหญิงณิชภัค น้อยกลัด', number: 40},
+            {id: '5592', name: 'เด็กชายนราธิป คำแก้ว', number: 41},
+            {id: '5593', name: 'เด็กชายอัมรินทร์ ซูช่วย', number: 42},
+            {id: '5619', name: 'เด็กชายปัणณวรรธ โรจนวิภาต', number: 43},
+            {id: '5709', name: 'เด็กหญิงกมนพรรธน์ ธนิสเกียรติกำธร', number: 44},
+            {id: '5927', name: 'เด็กชายธภัทร อยู่เย็น', number: 45}
+        ];
+
+        function populateStudentSelects() {
+            const selects = [document.getElementById('student-select'), document.getElementById('pending-student-select')];
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">เลือกนักเรียน</option>';
+                students.forEach(student => {
+                    if (student.id !== '0000') { // Exclude guest from teacher selects if desired, but include for consistency
+                        const option = document.createElement('option');
+                        option.value = student.id;
+                        option.text = `${student.id} - ${student.name} (เลขที่ ${student.number})`;
+                        select.appendChild(option);
+                    }
+                });
+            });
+        }
+
+        let currentStudentId = "";
+        let isGuest = false;
+
+        function loginStudent() {
+            const id = document.getElementById('student-id-input').value;
+            const student = students.find(s => s.id === id);
+            if (student) {
+                currentStudentId = id;
+                isGuest = id === '0000';
+                document.getElementById('student-name-tag').innerText = `👤 ${student.name} (ID${id} เลขที่ ${student.number})`;
+                const codingCard = document.getElementById('coding-subject-card');
+                const mathCard = document.getElementById('math-subject-card');
+                codingCard.style.display = isGuest ? 'none' : 'block';
+                mathCard.style.display = isGuest ? 'none' : 'block';
+                if (!isGuest) {
+                    let loginLogs = JSON.parse(localStorage.getItem('loginLogs') || '[]');
+                    loginLogs.push({id: currentStudentId, name: student.name, number: student.number, timestamp: new Date().toISOString()});
+                    localStorage.setItem('loginLogs', JSON.stringify(loginLogs));
+                }
+                showScreen('student-dash');
+            } else { 
+                alert('รหัสนักเรียนไม่ถูกต้อง! กรุณาลองใหม่'); 
+            }
+        }
+
+        function logoutStudent() {
+            if(confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+                currentStudentId = "";
+                isGuest = false;
+                document.getElementById('student-id-input').value = "";
+                showScreen('student-login');
+            }
+        }
+
+        let timerInterval;
+        function loadStudentDoNow() {
+        const subject = currentSubject;
+        
+        // ดึงข้อมูลจาก Firebase
+        firebase.database().ref(`currentDoNow/${subject}`).on('value', (snapshot) => {
+            const data = snapshot.val();
+            const active = document.getElementById('donow-active-area');
+            const empty = document.getElementById('donow-empty');
+
+            if(data) {
+            active.classList.remove('hidden');
+            empty.classList.add('hidden');
+            document.getElementById('question-display').innerText = "คำถาม: " + data.question;
+            startTimer(180);
+            } else {
+            active.classList.add('hidden');
+            empty.classList.remove('hidden');
+            }
+        });
+        }
+
+        function startTimer(sec) {
+            clearInterval(timerInterval);
+            let t = sec;
+            const disp = document.getElementById('timer-display');
+            timerInterval = setInterval(() => {
+                let m = Math.floor(t / 60), s = t % 60;
+                disp.innerText = `⏳ เวลาที่เหลือ: ${m}:${s < 10 ? '0'+s : s} นาที`;
+                if (--t < 0) { 
+                    clearInterval(timerInterval); 
+                    disp.innerText = "หมดเวลาส่งคำตอบ!"; 
+                    document.getElementById('btn-submit-answer').disabled = true;
+                }
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            if (isGuest) return alert('นักเรียนทดสอบไม่สามารถส่งคำตอบได้');
+            const subject = currentSubject;
+            const ans = document.getElementById('stu-answer').value;
+            
+            if(!ans) return alert('กรุณาพิมพ์คำตอบก่อนส่ง');
+
+            let allAns = JSON.parse(localStorage.getItem(`studentAnswers_${subject}`) || '[]');
+            
+            if(allAns.find(a => a.id === currentStudentId)) {
+                return alert('คุณได้ส่งคำตอบนี้ไปแล้ว');
+            }
+            
+            allAns.push({ id: currentStudentId, ans: ans });
+            localStorage.setItem(`studentAnswers_${subject}`, JSON.stringify(allAns));
+            
+            alert('ส่งคำตอบสำเร็จ!');
+            document.getElementById('stu-answer').value = ""; 
+            showScreen(currentSubject === 'coding' ? 'coding-options' : 'math-options');
+        }
+
+        function saveScores() {
+            const subject = document.getElementById('scores-subject-select').value;
+            const id = document.getElementById('student-select').value;
+            const exam = parseFloat(document.getElementById('exam-score').value);
+            const collect = parseFloat(document.getElementById('collect-score').value);
+
+            if (!subject) return alert('กรุณาเลือกวิชาก่อน');
+            if (!id || isNaN(exam) || isNaN(collect)) return alert('กรุณากรอกข้อมูลให้ครบ');
+            if (exam < 0 || exam > 10 || collect < 0 || collect > 40) return alert('คะแนนเกินขอบเขต');
+
+            let scores = JSON.parse(localStorage.getItem(`studentScores_${subject}`) || '{}');
+            scores[id] = { exam, collect };
+            localStorage.setItem(`studentScores_${subject}`, JSON.stringify(scores));
+
+            alert('บันทึกคะแนนเรียบร้อย');
+            document.getElementById('student-select').value = '';
+            document.getElementById('exam-score').value = '';
+            document.getElementById('collect-score').value = '';
+        }
+
+        function resetScores() {
+            const subject = document.getElementById('scores-subject-select').value;
+            const id = document.getElementById('student-select').value;
+            if (!subject) return alert('กรุณาเลือกวิชาก่อน');
+            if (!id) return alert('กรุณาเลือกนักเรียนก่อน');
+
+            if (confirm('ยืนยันการรีเซ็ตคะแนนของนักเรียนคนนี้?')) {
+                let scores = JSON.parse(localStorage.getItem(`studentScores_${subject}`) || '{}');
+                delete scores[id];
+                localStorage.setItem(`studentScores_${subject}`, JSON.stringify(scores));
+                alert('รีเซ็ตคะแนนเรียบร้อย');
+                document.getElementById('student-select').value = '';
+                document.getElementById('exam-score').value = '';
+                document.getElementById('collect-score').value = '';
+            }
+        }
+
+        function loadStudentScores() {
+            if (isGuest) {
+                const disp = document.getElementById('scores-display');
+                disp.innerHTML = '<p class="no-score">นักเรียนทดสอบไม่สามารถดูคะแนนได้ 😊</p>';
+                return;
+            }
+            const subject = currentSubject;
+            const disp = document.getElementById('scores-display');
+            const scores = JSON.parse(localStorage.getItem(`studentScores_${subject}`) || '{}');
+
+            if (scores[currentStudentId]) {
+                const s = scores[currentStudentId];
+                disp.innerHTML = `
+                    <div class="score-item">คะแนนสอบ: ${s.exam}/10</div>
+                    <div class="score-item">คะแนนเก็บ: ${s.collect}/40</div>
+                    <div class="score-total">คะแนนรวม: ${s.exam + s.collect}/50</div>
+                `;
+            } else {
+                disp.innerHTML = '<p class="no-score">คุณครูยังไม่ลงคะแนน 😊</p>';
+            }
+        }
+
+        // Pending System Functions
+        function addPendingTask() {
+            const subject = document.getElementById('pending-subject-select').value;
+            const studentId = document.getElementById('pending-student-select').value;
+            const taskText = document.getElementById('new-pending-task').value;
+            const file = document.getElementById('pending-task-image').files[0];
+            if (!subject || !studentId || !taskText) return alert('กรุณากรอกข้อมูลให้ครบ');
+            let pending = JSON.parse(localStorage.getItem(`pendingTasks_${subject}`) || '{}');
+            if (!pending[studentId]) pending[studentId] = [];
+            const task = { text: taskText, image: null };
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    task.image = e.target.result;
+                    pending[studentId].push(task);
+                    localStorage.setItem(`pendingTasks_${subject}`, JSON.stringify(pending));
+                    document.getElementById('new-pending-task').value = '';
+                    document.getElementById('pending-task-image').value = '';
+                    loadPendingTasks();
+                    alert('เพิ่มงานค้างเรียบร้อย');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                pending[studentId].push(task);
+                localStorage.setItem(`pendingTasks_${subject}`, JSON.stringify(pending));
+                document.getElementById('new-pending-task').value = '';
+                loadPendingTasks();
+                alert('เพิ่มงานค้างเรียบร้อย');
+            }
+        }
+
+        function loadPendingTasks() {
+            const subject = document.getElementById('pending-subject-select').value;
+            const studentId = document.getElementById('pending-student-select').value;
+            if (!subject || !studentId) return;
+            const pending = JSON.parse(localStorage.getItem(`pendingTasks_${subject}`) || '{}');
+            const list = document.getElementById('pending-tasks-list');
+            list.innerHTML = '';
+            if (pending[studentId]) {
+                pending[studentId].forEach((task, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'task-item';
+                    div.innerHTML = task.text;
+                    if (task.image) {
+                        const img = document.createElement('img');
+                        img.src = task.image;
+                        img.style.width = '100px';
+                        div.appendChild(img);
+                    }
+                    div.innerHTML += ` <button onclick="deletePendingTask('${subject}', '${studentId}', ${idx})">ลบ</button>`;
+                    list.appendChild(div);
+                });
+            }
+        }
+
+        function deletePendingTask(subject, studentId, idx) {
+            let pending = JSON.parse(localStorage.getItem(`pendingTasks_${subject}`) || '{}');
+            pending[studentId].splice(idx, 1);
+            if (pending[studentId].length === 0) delete pending[studentId];
+            localStorage.setItem(`pendingTasks_${subject}`, JSON.stringify(pending));
+            loadPendingTasks();
+        }
+
+        function loadStudentPending() {
+            if (isGuest) return;
+            const subject = currentSubject;
+            const pending = JSON.parse(localStorage.getItem(`pendingTasks_${subject}`) || '{}');
+            const list = document.getElementById('student-pending-list');
+            list.innerHTML = '';
+            if (pending[currentStudentId] && pending[currentStudentId].length > 0) {
+                pending[currentStudentId].forEach(task => {
+                    const div = document.createElement('div');
+                    div.className = 'task-item';
+                    div.innerText = task.text;
+                    if (task.image) {
+                        const img = document.createElement('img');
+                        img.src = task.image;
+                        img.style.width = '100px';
+                        div.appendChild(img);
+                    }
+                    list.appendChild(div);
+                });
+            } else {
+                list.innerHTML = '<p>คุณส่งงานครบทุกชิ้นแล้ว 😊</p>';
+            }
+        }
+
+        function submitPendingWork() {
+            if (isGuest) return alert('นักเรียนทดสอบไม่สามารถส่งงานได้');
+
+            const subject = currentSubject;
+            const fileInput = document.getElementById('pending-file-upload');
+            const textAnswer = document.getElementById('pending-text-answer').value;
+            const file = fileInput.files[0];
+
+            if (!textAnswer && !file) {
+                return alert('กรุณาพิมพ์คำตอบหรืออัปโหลดรูปภาพอย่างน้อย 1 อย่าง');
+            }
+
+            let submissions = JSON.parse(localStorage.getItem(`pendingSubmissions_${subject}`) || '{}');
+            if (!submissions[currentStudentId]) submissions[currentStudentId] = [];
+
+            const submissionData = {
+                text: textAnswer || "",
+                image: null
+            };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    submissionData.image = e.target.result;
+                    submissions[currentStudentId].push(submissionData);
+                    localStorage.setItem(`pendingSubmissions_${subject}`, JSON.stringify(submissions));
+                    alert('ส่งงานสำเร็จ!');
+                    fileInput.value = '';
+                    document.getElementById('pending-text-answer').value = '';
+                    loadStudentPending();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                submissions[currentStudentId].push(submissionData);
+                localStorage.setItem(`pendingSubmissions_${subject}`, JSON.stringify(submissions));
+                alert('ส่งงานสำเร็จ!');
+                document.getElementById('pending-text-answer').value = '';
+                loadStudentPending();
+            }
+        }
+
+        function viewStudentPendingSubmissions() {
+            const subject = document.getElementById('pending-subject-select').value;
+            const studentId = document.getElementById('pending-student-select').value;
+            if (!subject || !studentId) return alert('กรุณาเลือกวิชาและนักเรียน');
+
+            const submissions = JSON.parse(localStorage.getItem(`pendingSubmissions_${subject}`) || '{}');
+            const list = document.getElementById('pending-tasks-list');
+            list.innerHTML += '<h4>การส่งงาน:</h4>';
+
+            if (submissions[studentId]) {
+                submissions[studentId].forEach((item) => {
+                    if (item.text) {
+                        const p = document.createElement('p');
+                        p.innerText = "คำตอบ: " + item.text;
+                        list.appendChild(p);
+                    }
+                    if (item.image) {
+                        const img = document.createElement('img');
+                        img.src = item.image;
+                        img.style.width = '100px';
+                        img.style.display = 'block';
+                        img.style.marginBottom = '10px';
+                        list.appendChild(img);
+                    }
+                });
+            } else {
+                list.innerHTML += '<p>ยังไม่มีการส่งงาน</p>';
+            }
+        }
+
+        // Exam System Functions
+        let questionCount = 0;
+
+        function addExamQuestionField() {
+            questionCount++;
+            const list = document.getElementById('exam-questions-list');
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.innerHTML = `
+                <select class="question-type">
+                    <option value="subjective">อัตนัย</option>
+                    <option value="objective">ปรนัย</option>
+                </select>
+                <textarea placeholder="คำถาม ${questionCount}"></textarea>
+                <input type="number" placeholder="คะแนน" min="1">
+                <input type="file" class="question-image" accept="image/*">
+                <div class="options-container hidden">
+                    <input type="text" class="option-input" placeholder="ตัวเลือก A">
+                    <input type="text" class="option-input" placeholder="ตัวเลือก B">
+                    <input type="text" class="option-input" placeholder="ตัวเลือก C">
+                    <input type="text" class="option-input" placeholder="ตัวเลือก D">
+                    <input type="text" placeholder="คำตอบที่ถูกต้อง (A/B/C/D)">
+                </div>
+                <div class="subjective-container hidden">
+                    <input type="text" placeholder="คำตอบที่ถูกต้อง (สำหรับตรวจอัตโนมัติ)">
+                </div>
+                <button style="background: var(--danger); width: auto;" onclick="this.parentNode.remove()">ลบข้อนี้</button>
+            `;
+            const typeSelect = div.querySelector('.question-type');
+            const optionsContainer = div.querySelector('.options-container');
+            const subjectiveContainer = div.querySelector('.subjective-container');
+            typeSelect.addEventListener('change', () => {
+                optionsContainer.classList.toggle('hidden', typeSelect.value !== 'objective');
+                subjectiveContainer.classList.toggle('hidden', typeSelect.value !== 'subjective');
+            });
+            list.appendChild(div);
+        }
+
+        function sendExam() {
+            const subject = document.getElementById('exam-subject-select').value;
+            if (!subject) return alert('กรุณาเลือกวิชา');
+            const questions = [];
+            document.querySelectorAll('#exam-questions-list .question-item').forEach(item => {
+                const type = item.querySelector('.question-type').value;
+                const text = item.querySelector('textarea').value;
+                const points = parseInt(item.querySelector('input[type=number]').value);
+                const file = item.querySelector('.question-image').files[0];
+                let options = [];
+                let correct = '';
+                let image = null;
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        image = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+                if (type === 'objective') {
+                    options = Array.from(item.querySelectorAll('.option-input')).map(opt => opt.value);
+                    correct = item.querySelector('input[type=text]:last-child').value;
+                } else if (type === 'subjective') {
+                    correct = item.querySelector('.subjective-container input').value;
+                }
+                if (text && !isNaN(points)) questions.push({type, text, points, options, correct, image});
+            });
+            if (questions.length === 0) return alert('กรุณาเพิ่มข้อสอบ');
+            localStorage.setItem(`examQuestions_${subject}`, JSON.stringify(questions));
+            localStorage.removeItem(`examStarted_${subject}`);
+            localStorage.removeItem(`examAnswers_${subject}`);
+            alert('ส่งข้อสอบเรียบร้อย');
+        }
+
+        function startExam() {
+            const subject = document.getElementById('exam-subject-select').value;
+            if (!subject) return alert('กรุณาเลือกวิชา');
+            if (!localStorage.getItem(`examQuestions_${subject}`)) return alert('ยังไม่มีข้อสอบ');
+            localStorage.setItem(`examStarted_${subject}`, 'true');
+            alert('เริ่มสอบแล้ว');
+        }
+
+        function closeExam() {
+            const subject = document.getElementById('exam-subject-select').value;
+            if (!subject) return alert('กรุณาเลือกวิชา');
+            localStorage.setItem(`examStarted_${subject}`, 'false');
+            alert('ปิดการสอบเรียบร้อย');
+        }
+
+        function deleteExam() {
+            const subject = document.getElementById('exam-subject-select').value;
+            if (!subject) return alert('กรุณาเลือกวิชา');
+            if (confirm('ยืนยันการลบข้อสอบ?')) {
+                localStorage.removeItem(`examQuestions_${subject}`);
+                localStorage.removeItem(`examStarted_${subject}`);
+                localStorage.removeItem(`examAnswers_${subject}`);
+                document.getElementById('exam-questions-list').innerHTML = '';
+                questionCount = 0;
+                alert('ลบข้อสอบเรียบร้อย');
+            }
+        }
+
+        function loadTeacherExam() {
+            const subject = document.getElementById('exam-subject-select').value;
+            if (!subject) return;
+            const questions = JSON.parse(localStorage.getItem(`examQuestions_${subject}`) || '[]');
+            const list = document.getElementById('exam-questions-list');
+            list.innerHTML = '';
+            questionCount = 0;
+            questions.forEach(q => {
+                addExamQuestionField();
+                const item = list.lastChild;
+                item.querySelector('.question-type').value = q.type;
+                item.querySelector('textarea').value = q.text;
+                item.querySelector('input[type=number]').value = q.points;
+                if (q.image) {
+                    const img = document.createElement('img');
+                    img.src = q.image;
+                    img.style.width = '100px';
+                    item.appendChild(img);
+                }
+                if (q.type === 'objective') {
+                    const opts = item.querySelectorAll('.option-input');
+                    q.options.forEach((opt, i) => opts[i].value = opt);
+                    item.querySelector('.options-container input[type=text]:last-child').value = q.correct;
+                    item.querySelector('.options-container').classList.remove('hidden');
+                } else if (q.type === 'subjective') {
+                    item.querySelector('.subjective-container input').value = q.correct;
+                    item.querySelector('.subjective-container').classList.remove('hidden');
+                }
+            });
+        }
+
+        function viewExamAnswers() {
+            const subject = document.getElementById('exam-subject-select').value;
+            if (!subject) return alert('กรุณาเลือกวิชา');
+            const answers = JSON.parse(localStorage.getItem(`examAnswers_${subject}`) || '{}');
+            const list = document.getElementById('exam-answers-list');
+            list.innerHTML = '';
+            Object.keys(answers).forEach(studentId => {
+                const studentAns = answers[studentId];
+                const div = document.createElement('div');
+                div.innerHTML = `<h4>นักเรียน ID: ${studentId}</h4>`;
+                studentAns.forEach((ans, idx) => {
+                    div.innerHTML += `<p>ข้อ ${idx+1}: ${ans}</p>`;
+                });
+                const button = document.createElement('button');
+                button.innerText = 'ตรวจอัตโนมัติ';
+                button.onclick = () => autoGradeExam(subject, studentId);
+                div.appendChild(button);
+                list.appendChild(div);
+            });
+            if (Object.keys(answers).length === 0) list.innerHTML = '<p>ยังไม่มีคำตอบ</p>';
+        }
+
+        function autoGradeExam(subject, studentId) {
+            const questions = JSON.parse(localStorage.getItem(`examQuestions_${subject}`));
+            const answers = JSON.parse(localStorage.getItem(`examAnswers_${subject}`));
+            const studentAns = answers[studentId];
+            let score = 0;
+            questions.forEach((q, idx) => {
+                if (q.type === 'objective' && q.correct && studentAns[idx].toUpperCase() === q.correct.toUpperCase()) {
+                    score += q.points;
+                } else if (q.type === 'subjective' && q.correct && studentAns[idx].trim().toLowerCase() === q.correct.trim().toLowerCase()) {
+                    score += q.points;
+                }
+            });
+            let scores = JSON.parse(localStorage.getItem(`studentScores_${subject}`) || '{}');
+            if (!scores[studentId]) scores[studentId] = {exam: 0, collect: 0};
+            scores[studentId].exam = score;
+            localStorage.setItem(`studentScores_${subject}`, JSON.stringify(scores));
+            alert(`ตรวจอัตโนมัติเรียบร้อย คะแนน: ${score}`);
+        }
+
+        function loadStudentExam() {
+            if (isGuest) return;
+            const subject = currentSubject;
+            const started = localStorage.getItem(`examStarted_${subject}`) === 'true';
+            const questions = JSON.parse(localStorage.getItem(`examQuestions_${subject}`));
+            const allAnswers = JSON.parse(localStorage.getItem(`examAnswers_${subject}`) || '{}');
+            const status = document.getElementById('exam-status');
+            const form = document.getElementById('exam-form');
+            const submitBtn = document.getElementById('submit-exam-btn');
+            const takers = Object.keys(allAnswers).length;
+            document.getElementById('exam-takers-count').innerText = `จำนวนผู้เข้าสอบ: ${takers}`;
+            if (!questions) {
+                status.innerText = 'ยังไม่มีข้อสอบ';
+                form.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+                return;
+            }
+            if (!started) {
+                status.innerText = 'รอคุณครูเริ่มสอบ';
+                form.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+                return;
+            }
+            if (allAnswers[currentStudentId]) {
+                status.innerText = 'คุณได้ส่งข้อสอบแล้ว';
+                form.classList.add('hidden');
+                submitBtn.classList.add('hidden');
+                return;
+            }
+            status.innerText = '';
+            form.classList.remove('hidden');
+            submitBtn.classList.remove('hidden');
+            form.innerHTML = '';
+            questions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question-item';
+                div.innerHTML = `<p>${q.text} (${q.points} คะแนน)</p>`;
+                if (q.image) {
+                    const img = document.createElement('img');
+                    img.src = q.image;
+                    img.style.width = '100px';
+                    div.appendChild(img);
+                }
+                if (q.type === 'objective') {
+                    q.options.forEach((opt, optIdx) => {
+                        const label = document.createElement('label');
+                        label.innerHTML = `<input type="radio" name="exam-ans-${idx}" value="${String.fromCharCode(65 + optIdx)}"> ${String.fromCharCode(65 + optIdx)}. ${opt}`;
+                        div.appendChild(label);
+                    });
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.id = `exam-ans-${idx}`;
+                    div.appendChild(textarea);
+                }
+                form.appendChild(div);
+            });
+        }
+
+        function submitExamAnswers() {  
+            const subject = currentSubject;
+            const questions = JSON.parse(localStorage.getItem(`examQuestions_${subject}`));
+            const answers = [];
+            questions.forEach((q, idx) => {
+                if (q.type === 'objective') {
+                    const selected = document.querySelector(`input[name="exam-ans-${idx}"]:checked`);
+                    answers.push(selected ? selected.value : '');
+                } else {
+                    answers.push(document.getElementById(`exam-ans-${idx}`).value);
+                }
+            });
+            let allAnswers = JSON.parse(localStorage.getItem(`examAnswers_${subject}`) || '{}');
+            allAnswers[currentStudentId] = answers;
+            localStorage.setItem(`examAnswers_${subject}`, JSON.stringify(allAnswers));
+            alert('ส่งข้อสอบสำเร็จ! คะแนนของคุณจะถูกตรวจโดยคุณครู');
+            showScreen(currentSubject === 'coding' ? 'coding-options' : 'math-options');
+        }
+
+        // Attendance System
+        function loadAttendance() {
+            const subject = document.getElementById('attendance-subject-select').value;
+            const date = document.getElementById('attendance-date').value;
+            if (!subject || !date) return;
+            const list = document.getElementById('attendance-list');
+            list.innerHTML = '';
+            const attendanceKey = `attendance_${subject}_${date}`;
+            let attendance = JSON.parse(localStorage.getItem(attendanceKey) || '{}');
+            students.forEach(student => {
+                if (student.id === '0000') return;
+                const tr = document.createElement('tr');
+                const select = document.createElement('select');
+                select.dataset.id = student.id;
+                ['มา', 'ขาด', 'ลาป่วย', 'ลากิจ'].forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.text = opt;
+                    if (attendance[student.id] === opt) option.selected = true;
+                    select.appendChild(option);
+                });
+                tr.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name} (เลขที่ ${student.number})</td>
+                    <td></td>
+                `;
+                tr.querySelector('td:last-child').appendChild(select);
+                list.appendChild(tr);
+            });
+        }
+
+        function saveAttendance() {
+            const subject = document.getElementById('attendance-subject-select').value;
+            const date = document.getElementById('attendance-date').value;
+            if (!subject || !date) return alert('กรุณาเลือกวิชาและวันที่');
+            const attendanceKey = `attendance_${subject}_${date}`;
+            let attendance = {};
+            document.querySelectorAll('#attendance-list select').forEach(select => {
+                attendance[select.dataset.id] = select.value;
+            });
+            localStorage.setItem(attendanceKey, JSON.stringify(attendance));
+            alert('บันทึกการเช็คชื่อเรียบร้อย');
+            loadAttendance();  // Reload to view saved data
+        }
+
+        // Login Logs
+        function loadLoginLogs() {
+            const logs = JSON.parse(localStorage.getItem('loginLogs') || '[]');
+            const list = document.getElementById('login-logs-list');
+            list.innerHTML = '';
+            if (logs.length > 0) {
+                logs.forEach((log, index) => {
+                    const date = new Date(log.timestamp);
+                    const time = `${date.getHours().toString().padStart(2, '0')}.${date.getMinutes().toString().padStart(2, '0')}.${date.getSeconds().toString().padStart(2, '0')}น.`;
+                    const div = document.createElement('div');
+                    div.className = 'answer-item';
+                    div.innerHTML = `${log.id}-${log.name} เลขที่ ${log.number} เวลา ${time}
+                                     <button style="width:auto; padding:4px 8px; background:var(--danger); font-size:10px;" onclick="deleteLoginLog(${index})">ลบ</button>`;
+                    list.appendChild(div);
+                });
+            } else {
+                list.innerHTML = '<p>ยังไม่มีบันทึก</p>';
+            }
+        }
+
+        function deleteLoginLog(index) {
+            let logs = JSON.parse(localStorage.getItem('loginLogs') || '[]');
+            logs.splice(index, 1);
+            localStorage.setItem('loginLogs', JSON.stringify(logs));
+            loadLoginLogs();
+        }
+
+        document.getElementById('exam-subject-select').addEventListener('change', loadTeacherExam);
+        document.getElementById('attendance-subject-select').addEventListener('change', loadAttendance);
+        document.getElementById('attendance-date').addEventListener('change', loadAttendance);
+        document.getElementById('answers-subject-select').addEventListener('change', showAnswers);
+        populateStudentSelects();
+    </script>
+</body>
+</html> 
+
+
