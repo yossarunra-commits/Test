@@ -636,13 +636,19 @@
 
   // ตัวอย่างการเปลี่ยนฟังก์ชันเดิม (จาก localStorage เป็น Firebase)
   // หากต้องการส่งคำถาม (Do Now) ไปที่ฐานข้อมูล:
-  function sendDoNowToFirebase(content) {
-    database.ref('donow').set({
-      question: content,
-      timestamp: Date.now()
-    });
-    alert('ส่งคำถามเรียบร้อยแล้ว!');
-  }
+  function sendDoNow() {
+  const subject = document.getElementById('donow-subject-select').value;
+  const q = document.getElementById('donow-question').value;
+  if(!subject || !q) return alert('กรุณากรอกข้อมูลให้ครบ');
+
+  // ส่งขึ้น Firebase แทน localStorage
+  firebase.database().ref(`currentDoNow_${subject}`).set({
+    question: q,
+    startTime: Date.now()
+  });
+  
+  alert('ส่งคําถามออนไลน์เรียบร้อย!');
+}
   
         let currentSubject = '';
         function setSubject(s) {
@@ -732,13 +738,16 @@
         }
 
         function deleteCurrentQuestion() {
-            const subject = document.getElementById('donow-subject-select').value;
-            if(!subject) return alert('กรุณาเลือกวิชาก่อน');
-            if(confirm('ยืนยันการลบคำถาม?')) {
-                localStorage.removeItem(`currentDoNow_${subject}`);
-                document.getElementById('donow-question').value = '';
-                alert('ลบคำถามเรียบร้อยแล้ว');
-            }
+        const subject = document.getElementById('donow-subject-select').value;
+        if(!subject) return alert('กรุณาเลือกวิชาก่อน');
+        
+        if(confirm('ยืนยันการลบคําถามสําหรับทุกคน?')) {
+            // ลบข้อมูลจาก Firebase (จะทำให้นักเรียนทุกคนเห็นว่าคำถามหายไปทันที)
+            firebase.database().ref(`currentDoNow_${subject}`).remove();
+            
+            document.getElementById('donow-question').value = '';
+            alert('ลบคําถามจากระบบออนไลน์เรียบร้อยแล้ว');
+        }
         }
 
         function showAnswers() {
@@ -871,9 +880,8 @@
         let timerInterval;
         function loadStudentDoNow() {
         const subject = currentSubject;
-        
-        // ดึงข้อมูลจาก Firebase
-        firebase.database().ref(`currentDoNow/${subject}`).on('value', (snapshot) => {
+        // ใช้ .on('value', ...) เพื่อให้นักเรียนเห็นการเปลี่ยนแปลงทันทีเมื่อครูส่งหรือลบ
+        firebase.database().ref(`currentDoNow_${subject}`).on('value', (snapshot) => {
             const data = snapshot.val();
             const active = document.getElementById('donow-active-area');
             const empty = document.getElementById('donow-empty');
@@ -881,9 +889,10 @@
             if(data) {
             active.classList.remove('hidden');
             empty.classList.add('hidden');
-            document.getElementById('question-display').innerText = "คำถาม: " + data.question;
+            document.getElementById('question-display').innerText = "คําถาม: " + data.question;
             startTimer(180);
             } else {
+            // ถ้าครูลบข้อมูลจาก Firebase (data เป็น null) หน้าจอนักเรียนจะเปลี่ยนเป็น "ไม่มีคำถาม" ทันที
             active.classList.add('hidden');
             empty.classList.remove('hidden');
             }
